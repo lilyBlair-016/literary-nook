@@ -1,0 +1,23 @@
+# Local configuration (copy credentials.example.php to credentials.php)
+config/credentials.php
+
+# Runtime-generated
+storage/mail/*
+!storage/mail/.gitkeep
+assets/uploads/avatar_*
+
+# Editors / OS
+.vscode/
+.idea/
+.claude/
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Documents and archives
+*.docx
+*.doc
+*.pdf
+*.bak
+*.log
+*.tmp

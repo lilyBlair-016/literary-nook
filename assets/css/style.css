@@ -1,0 +1,573 @@
+/* =============================================================================
+   The Literary Nook — theme layer (overrides Bootstrap 5.3 defaults)
+
+   Palette
+     Cream    #F3E9DC  page / card / form backgrounds
+     Caramel  #C08552  accents: buttons, links, icons, hover + active states
+     Brownie  #5E3023  navbar, footer, headings, primary text
+     Coffee   #895737  table headers, secondary buttons, borders, badges
+
+   Everything below re-points Bootstrap's own CSS variables at these four
+   colours, so the palette applies to every page without touching markup.
+   ========================================================================== */
+
+:root {
+    /* ---- The four brand colours ---- */
+    --ln-cream:   #F3E9DC;
+    --ln-caramel: #C08552;
+    --ln-brownie: #5E3023;
+    --ln-coffee:  #895737;
+
+    /* ---- Shades derived from the four above ----
+       Caramel at full strength only reaches 3.1:1 against white and 2.6:1
+       against cream, so solid controls and body links use the darker caramel
+       and coffee steps to clear WCAG AA. Pure caramel stays the accent on
+       dark surfaces and for borders, icons, and focus rings. */
+    --ln-cream-100:   #FBF6EF;  /* cream, lightened — cards, inputs, tables  */
+    --ln-cream-300:   #E3D3BC;  /* cream, darkened  — borders, dividers      */
+    --ln-cream-400:   #D6C0A3;
+    --ln-caramel-600: #A2673C;  /* solid button fill (4.6:1 on white)        */
+    --ln-caramel-700: #8F5A34;  /* button hover                              */
+    --ln-caramel-800: #7C4E2D;  /* button active                             */
+    --ln-coffee-700:  #6F452B;
+    --ln-brownie-700: #4A2419;  /* brownie hover / active                    */
+    --ln-brownie-900: #3B1C14;  /* text on caramel fills (4.9:1)             */
+    --ln-caramel-soft: rgba(192, 133, 82, .14);  /* hover wash, subtle fills */
+    --ln-brownie-muted: rgba(94, 48, 35, .68);   /* muted / secondary text   */
+
+    /* ---- Bootstrap theme colours ---- */
+    --bs-primary:   #A2673C;  --bs-primary-rgb:   162, 103, 60;
+    --bs-secondary: #895737;  --bs-secondary-rgb: 137,  87, 55;
+    --bs-info:      #895737;  --bs-info-rgb:      137,  87, 55;
+    --bs-warning:   #C08552;  --bs-warning-rgb:   192, 133, 82;
+    --bs-dark:      #5E3023;  --bs-dark-rgb:       94,  48, 35;
+    --bs-light:     #F3E9DC;  --bs-light-rgb:     243, 233, 220;
+
+    /* Success and danger stay green/red: they are reserved for validation
+       messages and stock / error states, the accessibility carve-out. Both
+       are warmed slightly so they sit comfortably beside the palette. */
+    --bs-success: #4F6F52;  --bs-success-rgb:  79, 111, 82;
+    --bs-danger:  #A8412F;  --bs-danger-rgb:  168,  65, 47;
+
+    /* ---- Surfaces and text ---- */
+    --bs-body-bg:            var(--ln-cream);
+    --bs-body-color:         var(--ln-brownie);
+    --bs-body-color-rgb:     94, 48, 35;
+    --bs-emphasis-color:     var(--ln-brownie);
+    --bs-heading-color:      var(--ln-brownie);
+    --bs-secondary-color:    var(--ln-brownie-muted);   /* .text-muted       */
+    --bs-tertiary-color:     rgba(94, 48, 35, .5);
+    --bs-secondary-bg:       var(--ln-cream-300);
+    --bs-secondary-bg-rgb:   227, 211, 188;
+    --bs-tertiary-bg:        var(--ln-cream);           /* .bg-body-tertiary */
+    --bs-tertiary-bg-rgb:    243, 233, 220;
+    --bs-border-color:       var(--ln-cream-300);
+    --bs-border-color-translucent: rgba(94, 48, 35, .16);
+    --bs-code-color:         var(--ln-coffee);
+
+    /* ---- Links ---- */
+    --bs-link-color:            var(--ln-coffee);
+    --bs-link-color-rgb:        137, 87, 55;
+    --bs-link-hover-color:      var(--ln-brownie);
+    --bs-link-hover-color-rgb:  94, 48, 35;
+
+    /* ---- Focus ring ---- */
+    --bs-focus-ring-color: rgba(192, 133, 82, .35);
+
+    /* ---- Subtle / emphasis variants (alerts, badges, list groups) ---- */
+    --bs-primary-bg-subtle:      #F0E1D2;
+    --bs-primary-border-subtle:  var(--ln-cream-400);
+    --bs-primary-text-emphasis:  var(--ln-brownie);
+    --bs-secondary-bg-subtle:    #EFE2D4;
+    --bs-secondary-border-subtle: var(--ln-cream-400);
+    --bs-secondary-text-emphasis: var(--ln-coffee-700);
+    --bs-info-bg-subtle:         #EFE2D4;
+    --bs-info-border-subtle:     var(--ln-cream-400);
+    --bs-info-text-emphasis:     var(--ln-coffee-700);
+    --bs-warning-bg-subtle:      #F5E6D5;
+    --bs-warning-border-subtle:  var(--ln-cream-400);
+    --bs-warning-text-emphasis:  var(--ln-caramel-800);
+    --bs-light-bg-subtle:        var(--ln-cream-100);
+    --bs-light-border-subtle:    var(--ln-cream-300);
+    --bs-dark-bg-subtle:         var(--ln-cream-400);
+    --bs-dark-border-subtle:     var(--ln-coffee);
+    --bs-dark-text-emphasis:     var(--ln-brownie);
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: var(--ln-cream);
+    color: var(--ln-brownie);
+}
+
+::selection { background: var(--ln-caramel); color: var(--ln-brownie-900); }
+
+/* Bootstrap's .bg-white is hard-coded to #fff — repoint it at the lightened
+   cream so cards, card headers, and panels stay on-palette. */
+.bg-white { background-color: var(--ln-cream-100) !important; }
+
+/* Badge / pill text colours that Bootstrap hard-codes to black or white. */
+.text-bg-warning { color: var(--ln-brownie-900) !important; }
+.text-bg-info,
+.text-bg-primary,
+.text-bg-secondary,
+.text-bg-dark    { color: var(--ln-cream) !important; }
+.text-bg-light   { color: var(--ln-brownie) !important; }
+
+/* =============================================================================
+   Buttons
+   ========================================================================== */
+
+/* Caramel — the primary call to action (.btn-warning is this app's CTA). */
+.btn-warning,
+.btn-primary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--ln-caramel-600);
+    --bs-btn-border-color: var(--ln-caramel-600);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--ln-caramel-700);
+    --bs-btn-hover-border-color: var(--ln-caramel-700);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--ln-caramel-800);
+    --bs-btn-active-border-color: var(--ln-caramel-800);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: var(--ln-caramel);
+    --bs-btn-disabled-border-color: var(--ln-caramel);
+}
+
+/* Coffee — secondary actions. */
+.btn-secondary,
+.btn-info {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--ln-coffee);
+    --bs-btn-border-color: var(--ln-coffee);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--ln-coffee-700);
+    --bs-btn-hover-border-color: var(--ln-coffee-700);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--ln-brownie);
+    --bs-btn-active-border-color: var(--ln-brownie);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: var(--ln-coffee);
+    --bs-btn-disabled-border-color: var(--ln-coffee);
+}
+
+/* Brownie — strong / dark actions. */
+.btn-dark {
+    --bs-btn-color: var(--ln-cream);
+    --bs-btn-bg: var(--ln-brownie);
+    --bs-btn-border-color: var(--ln-brownie);
+    --bs-btn-hover-color: var(--ln-cream);
+    --bs-btn-hover-bg: var(--ln-brownie-700);
+    --bs-btn-hover-border-color: var(--ln-brownie-700);
+    --bs-btn-active-color: var(--ln-cream);
+    --bs-btn-active-bg: var(--ln-brownie-900);
+    --bs-btn-active-border-color: var(--ln-brownie-900);
+}
+
+.btn-light {
+    --bs-btn-color: var(--ln-brownie);
+    --bs-btn-bg: var(--ln-cream-100);
+    --bs-btn-border-color: var(--ln-cream-300);
+    --bs-btn-hover-color: var(--ln-brownie);
+    --bs-btn-hover-bg: var(--ln-cream);
+    --bs-btn-hover-border-color: var(--ln-cream-400);
+    --bs-btn-active-color: var(--ln-brownie);
+    --bs-btn-active-bg: var(--ln-cream-300);
+    --bs-btn-active-border-color: var(--ln-cream-400);
+}
+
+/* Outline variants — brownie is the default outline button in this app. */
+.btn-outline-dark {
+    --bs-btn-color: var(--ln-brownie);
+    --bs-btn-border-color: var(--ln-brownie);
+    --bs-btn-hover-color: var(--ln-cream);
+    --bs-btn-hover-bg: var(--ln-brownie);
+    --bs-btn-hover-border-color: var(--ln-brownie);
+    --bs-btn-active-color: var(--ln-cream);
+    --bs-btn-active-bg: var(--ln-brownie-700);
+    --bs-btn-active-border-color: var(--ln-brownie-700);
+    --bs-btn-disabled-color: var(--ln-brownie-muted);
+    --bs-btn-disabled-border-color: var(--ln-cream-400);
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: var(--ln-coffee);
+    --bs-btn-border-color: var(--ln-coffee);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--ln-coffee);
+    --bs-btn-hover-border-color: var(--ln-coffee);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--ln-coffee-700);
+    --bs-btn-active-border-color: var(--ln-coffee-700);
+    --bs-btn-disabled-color: var(--ln-brownie-muted);
+    --bs-btn-disabled-border-color: var(--ln-cream-400);
+}
+
+.btn-outline-warning,
+.btn-outline-primary {
+    --bs-btn-color: var(--ln-caramel-700);
+    --bs-btn-border-color: var(--ln-caramel);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--ln-caramel-600);
+    --bs-btn-hover-border-color: var(--ln-caramel-600);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--ln-caramel-800);
+    --bs-btn-active-border-color: var(--ln-caramel-800);
+}
+
+.btn-outline-light {
+    --bs-btn-color: var(--ln-cream);
+    --bs-btn-border-color: var(--ln-cream);
+    --bs-btn-hover-color: var(--ln-brownie);
+    --bs-btn-hover-bg: var(--ln-cream);
+    --bs-btn-hover-border-color: var(--ln-cream);
+    --bs-btn-active-color: var(--ln-brownie);
+    --bs-btn-active-bg: var(--ln-cream);
+}
+
+/* =============================================================================
+   Navbar (brownie) + footer
+   ========================================================================== */
+
+/* Bootstrap 5.3 deprecated `.navbar-dark`, so scope these to `.navbar.bg-dark`
+   to be sure they win regardless of which the markup uses. */
+.navbar.bg-dark,
+.navbar-dark {
+    --bs-navbar-color: var(--ln-cream);
+    --bs-navbar-hover-color: var(--ln-caramel);
+    --bs-navbar-active-color: var(--ln-caramel);
+    --bs-navbar-brand-color: var(--ln-cream);
+    --bs-navbar-brand-hover-color: var(--ln-caramel);
+    --bs-navbar-toggler-border-color: rgba(243, 233, 220, .3);
+}
+.navbar.bg-dark {
+    background-color: var(--ln-brownie) !important;
+    border-bottom: 3px solid var(--ln-caramel);
+}
+.navbar .btn-warning {  /* search submit sits on brownie — lift it to caramel */
+    --bs-btn-bg: var(--ln-caramel);
+    --bs-btn-border-color: var(--ln-caramel);
+    --bs-btn-color: var(--ln-brownie-900);
+    --bs-btn-hover-bg: var(--ln-caramel-600);
+    --bs-btn-hover-border-color: var(--ln-caramel-600);
+    --bs-btn-hover-color: #fff;
+}
+
+footer.bg-dark { background-color: var(--ln-brownie) !important; }
+/* Headings default to brownie, which would vanish against the brownie footer. */
+footer h1, footer h2, footer h3, footer h4, footer h5 { color: var(--ln-cream); }
+footer .text-secondary { color: rgba(243, 233, 220, .72) !important; }
+footer h6.text-secondary { color: var(--ln-caramel) !important; }
+footer .border-secondary { border-color: rgba(243, 233, 220, .22) !important; }
+footer a.link-light:hover { color: var(--ln-caramel) !important; }
+
+/* =============================================================================
+   Cards, dropdowns, modals, list groups
+   ========================================================================== */
+
+.card {
+    --bs-card-bg: var(--ln-cream-100);
+    --bs-card-border-color: var(--ln-cream-300);
+    --bs-card-cap-bg: var(--ln-cream-100);
+    --bs-card-color: var(--ln-brownie);
+}
+.card-header {
+    border-bottom-color: var(--ln-cream-300);
+    color: var(--ln-brownie);
+}
+
+.dropdown-menu {
+    --bs-dropdown-bg: var(--ln-cream-100);
+    --bs-dropdown-color: var(--ln-brownie);
+    --bs-dropdown-border-color: var(--ln-cream-300);
+    --bs-dropdown-link-color: var(--ln-brownie);
+    --bs-dropdown-link-hover-color: var(--ln-brownie);
+    --bs-dropdown-link-hover-bg: var(--ln-caramel-soft);
+    --bs-dropdown-link-active-color: #fff;
+    --bs-dropdown-link-active-bg: var(--ln-caramel-600);
+    --bs-dropdown-header-color: var(--ln-coffee);
+    --bs-dropdown-divider-bg: var(--ln-cream-300);
+}
+
+.modal {
+    --bs-modal-bg: var(--ln-cream-100);
+    --bs-modal-color: var(--ln-brownie);
+    --bs-modal-border-color: var(--ln-cream-300);
+    --bs-modal-header-border-color: var(--ln-cream-300);
+    --bs-modal-footer-border-color: var(--ln-cream-300);
+}
+.modal-backdrop { --bs-backdrop-bg: var(--ln-brownie-900); }
+
+.list-group {
+    --bs-list-group-bg: var(--ln-cream-100);
+    --bs-list-group-color: var(--ln-brownie);
+    --bs-list-group-border-color: var(--ln-cream-300);
+    --bs-list-group-action-hover-color: var(--ln-brownie);
+    --bs-list-group-action-hover-bg: var(--ln-caramel-soft);
+    --bs-list-group-active-color: #fff;
+    --bs-list-group-active-bg: var(--ln-caramel-600);
+    --bs-list-group-active-border-color: var(--ln-caramel-600);
+}
+
+.nav-pills {
+    --bs-nav-pills-link-active-bg: var(--ln-caramel-600);
+    --bs-nav-pills-link-active-color: #fff;
+}
+/* Exclude .navbar-nav: it inherits --bs-nav-link-color from --bs-navbar-color,
+   and setting the var on .nav-link itself would override that with coffee. */
+.nav:not(.navbar-nav) {
+    --bs-nav-link-color: var(--ln-coffee);
+    --bs-nav-link-hover-color: var(--ln-brownie);
+}
+
+.pagination {
+    --bs-pagination-color: var(--ln-coffee);
+    --bs-pagination-bg: var(--ln-cream-100);
+    --bs-pagination-border-color: var(--ln-cream-300);
+    --bs-pagination-hover-color: var(--ln-brownie);
+    --bs-pagination-hover-bg: var(--ln-caramel-soft);
+    --bs-pagination-hover-border-color: var(--ln-cream-400);
+    --bs-pagination-focus-color: var(--ln-brownie);
+    --bs-pagination-focus-bg: var(--ln-caramel-soft);
+    --bs-pagination-active-bg: var(--ln-caramel-600);
+    --bs-pagination-active-border-color: var(--ln-caramel-600);
+    --bs-pagination-disabled-color: var(--ln-brownie-muted);
+    --bs-pagination-disabled-bg: var(--ln-cream);
+    --bs-pagination-disabled-border-color: var(--ln-cream-300);
+}
+
+/* =============================================================================
+   Tables — coffee headers on cream rows
+   ========================================================================== */
+
+.table {
+    --bs-table-color: var(--ln-brownie);
+    --bs-table-bg: transparent;
+    --bs-table-border-color: var(--ln-cream-300);
+    --bs-table-striped-color: var(--ln-brownie);
+    --bs-table-striped-bg: rgba(192, 133, 82, .07);
+    --bs-table-hover-color: var(--ln-brownie);
+    --bs-table-hover-bg: var(--ln-caramel-soft);
+}
+.table thead th { white-space: nowrap; }
+
+/* .table-light is used for table headers throughout the app. */
+.table-light {
+    --bs-table-color: var(--ln-cream);
+    --bs-table-bg: var(--ln-coffee);
+    --bs-table-border-color: var(--ln-coffee-700);
+    --bs-table-striped-color: var(--ln-cream);
+    --bs-table-hover-color: var(--ln-cream);
+    --bs-table-hover-bg: var(--ln-coffee-700);
+}
+.table-secondary {
+    --bs-table-color: var(--ln-brownie);
+    --bs-table-bg: var(--ln-cream-300);
+    --bs-table-border-color: var(--ln-cream-400);
+}
+.table-warning {
+    --bs-table-color: var(--ln-brownie-900);
+    --bs-table-bg: #F0DCC3;
+    --bs-table-border-color: var(--ln-cream-400);
+}
+
+/* =============================================================================
+   Forms
+   ========================================================================== */
+
+.form-control,
+.form-select {
+    background-color: var(--ln-cream-100);
+    border-color: var(--ln-cream-400);
+    color: var(--ln-brownie);
+}
+.form-control::placeholder { color: rgba(94, 48, 35, .45); }
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--ln-cream-100);
+    border-color: var(--ln-caramel);
+    box-shadow: 0 0 0 .25rem rgba(192, 133, 82, .28);
+    color: var(--ln-brownie);
+}
+.form-control:disabled,
+.form-select:disabled { background-color: var(--ln-cream-300); }
+
+.input-group-text {
+    background-color: var(--ln-cream-300);
+    border-color: var(--ln-cream-400);
+    color: var(--ln-brownie);
+}
+.form-label { color: var(--ln-brownie); font-weight: 500; }
+.form-text  { color: var(--ln-brownie-muted); }
+
+.form-check-input {
+    background-color: var(--ln-cream-100);
+    border-color: var(--ln-cream-400);
+}
+.form-check-input:checked {
+    background-color: var(--ln-caramel-600);
+    border-color: var(--ln-caramel-600);
+}
+.form-check-input:focus {
+    border-color: var(--ln-caramel);
+    box-shadow: 0 0 0 .25rem rgba(192, 133, 82, .28);
+}
+
+/* Keep the search field readable against the brownie navbar. */
+.navbar .form-control { border-color: var(--ln-coffee); }
+
+/* =============================================================================
+   Hero, book cards, and other app-specific pieces
+   ========================================================================== */
+
+/* Hero: the bookshelf photo sits behind the copy. The gradient layered on top of
+   it is a scrim — the image is bright and busy, and the hero text is cream, so
+   without it the headline would be unreadable. Heaviest on the left (where the
+   text sits) and lightening to the right so the shelves still show through. */
+.hero {
+    background-image:
+        linear-gradient(100deg,
+            rgba(59, 28, 20, .93) 0%,
+            rgba(59, 28, 20, .88) 40%,
+            rgba(94, 48, 35, .70) 70%,
+            rgba(94, 48, 35, .45) 100%),
+        url('../images/header-image.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: var(--ln-cream);
+    border-radius: 1rem;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .35);   /* extra legibility over the photo */
+}
+/* On narrow screens the copy spans the full width, so the scrim must be even
+   across the whole box rather than fading out to the right. */
+@media (max-width: 767.98px) {
+    .hero {
+        background-image:
+            linear-gradient(rgba(59, 28, 20, .92), rgba(59, 28, 20, .92)),
+            url('../images/header-image.jpg');
+    }
+}
+.hero .display-5 { font-weight: 700; }
+.hero h1, .hero h2, .hero .display-5 { color: var(--ln-cream); }
+/* Emphasis / muted utilities sit on brownie inside the hero, so they need the
+   light end of the palette rather than the dark end. */
+.hero .text-warning-emphasis { color: var(--ln-caramel) !important; }
+.hero .text-muted,
+.hero .text-secondary { color: rgba(243, 233, 220, .78) !important; }
+
+.book-card {
+    transition: transform .15s ease, box-shadow .15s ease;
+    border: 1px solid var(--ln-cream-300);
+}
+.book-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--ln-caramel);
+    box-shadow: 0 .75rem 1.5rem rgba(94, 48, 35, .18) !important;
+}
+
+/* Cover image / placeholder keeps a consistent 2:3 book ratio */
+.book-cover {
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    width: 100%;
+    background: var(--ln-cream-300);
+}
+.book-cover-placeholder {
+    aspect-ratio: 2 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--ln-coffee), var(--ln-brownie));
+    color: var(--ln-caramel);
+    font-size: 2.5rem;
+}
+
+.price-tag { color: var(--ln-caramel-700); font-weight: 700; }
+.format-chip { font-size: .72rem; }
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--ln-brownie-muted);
+}
+.empty-state i { font-size: 3rem; opacity: .4; color: var(--ln-caramel); }
+
+/* Dashboard stat cards */
+.stat-card { border-left: .35rem solid var(--ln-caramel); }
+.stat-card .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--ln-brownie); }
+
+/* Loading spinner overlay (toggled by main.js) */
+#page-loader {
+    position: fixed; inset: 0;
+    background: rgba(243, 233, 220, .72);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 2000;
+}
+#page-loader.show { display: flex; }
+
+hr { border-color: var(--ln-cream-400); opacity: .75; }
+.border-secondary { border-color: var(--ln-coffee) !important; }
+.progress { --bs-progress-bg: var(--ln-cream-300); --bs-progress-bar-bg: var(--ln-caramel-600); }
+
+/* ---- Site logo (assets/images/logo.*) -------------------------------------
+   Used in the navbar, the footer and the receipt letterhead. Height-constrained
+   so any image fits; width follows the aspect ratio so a wordmark is not
+   squashed. The mark is transparent, so it sits happily on both the dark
+   navbar/footer and the white receipt. */
+.site-logo {
+    height: 34px;
+    width: auto;
+    max-width: 170px;
+    object-fit: contain;
+}
+
+/* Browsers drop background graphics when printing, but <img> still prints.
+   Force colour retention so the receipt letterhead is not washed out. */
+@media print {
+    .site-logo-print {
+        height: 44px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+/* ---- Reports dashboard ----------------------------------------------------- */
+.report-section {
+    margin: 2rem 0 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 2px solid var(--ln-cream-400);
+    color: var(--ln-brownie);
+    font-weight: 700;
+}
+.report-section .bi { color: var(--ln-caramel); }
+
+.kpi-card { border: 1px solid var(--ln-cream-300); }
+.kpi-card:hover { border-color: var(--ln-caramel); }
+.kpi-label { letter-spacing: .04em; line-height: 1.2; }
+.kpi-icon  { color: var(--ln-caramel); font-size: 1.15rem; flex-shrink: 0; }
+.kpi-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--ln-brownie);
+    line-height: 1.25;
+    margin-top: .35rem;
+    overflow-wrap: anywhere;   /* long currency figures must not overflow the tile */
+}
+
+/* Label/value rows used in the stock-health, payments and revenue cards. */
+.stat-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: .3rem 0;
+}
+.stat-line .dot {
+    display: inline-block;
+    width: .6rem; height: .6rem;
+    border-radius: 50%;
+    margin-right: .45rem;
+}
