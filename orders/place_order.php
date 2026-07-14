@@ -98,6 +98,12 @@ send_app_mail($_SESSION['user_email'], 'Your ' . SITE_NAME . ' order ' . $orderN
 
 // Cash on delivery needs no online payment; others go to the payment gateway.
 if ($method === 'cod') {
+    // COD skips payment.php, so the receipt must be sent from here — otherwise
+    // these customers would never receive one.
+    send_app_mail($_SESSION['user_email'],
+        'Receipt for ' . $orderNumber . ' — ' . SITE_NAME,
+        order_receipt_html($orderId));
+
     set_flash('Order placed! Pay on delivery.', 'success');
     redirect('orders/confirmation.php?order=' . $orderId);
 }

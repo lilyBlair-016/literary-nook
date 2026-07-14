@@ -20,13 +20,17 @@ $menu = $isAdmin ? [
     'payments'  => ['Payments',    'bi-credit-card',  'admin/payments.php'],
     'customers' => ['Customers',   'bi-people',       'admin/customers.php'],
     'reports'   => ['Reports',     'bi-graph-up',     'admin/reports.php'],
+    // 'alerts' is the broadcast tool; 'inbox' is the admin's own notifications.
+    'alerts'    => ['Send Alerts', 'bi-megaphone',    'admin/notifications.php'],
+    'inbox'     => ['My Alerts',   'bi-bell',         'notifications.php'],
     'users'     => ['User Mgmt',   'bi-person-badge', 'admin/users.php'],
 ] : [
-    'dashboard' => ['Dashboard',    'bi-grid',       'customer/dashboard.php'],
-    'orders'    => ['My Orders',    'bi-bag',        'customer/orders.php'],
-    'wishlist'  => ['Wishlist',     'bi-heart',      'customer/wishlist.php'],
-    'addresses' => ['Addresses',    'bi-geo-alt',    'customer/addresses.php'],
-    'profile'   => ['Profile',      'bi-person',     'customer/profile.php'],
+    'dashboard' => ['Dashboard',     'bi-grid',       'customer/dashboard.php'],
+    'orders'    => ['My Orders',     'bi-bag',        'customer/orders.php'],
+    'wishlist'  => ['Wishlist',      'bi-heart',      'customer/wishlist.php'],
+    'inbox'     => ['Notifications', 'bi-bell',       'notifications.php'],
+    'addresses' => ['Addresses',     'bi-geo-alt',    'customer/addresses.php'],
+    'profile'   => ['Profile',       'bi-person',     'customer/profile.php'],
 ];
 ?>
 <div class="list-group shadow-sm sticky-lg-top" style="top:5rem;">

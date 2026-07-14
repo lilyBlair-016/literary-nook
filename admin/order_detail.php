@@ -23,6 +23,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'status') {
         $new = $_POST['status'] ?? '';
         $valid = ['pending','confirmed','shipped','delivered','cancelled'];
+
+        /* A physical order cannot go "shipped" without a carrier and a tracking
+           number: the customer is told it is on its way and then has nothing to
+           track. Digital-only orders have no shipment row, so they are exempt. */
+        if ($new === 'shipped') {
+            $ship = db_one('SELECT carrier, tracking_number FROM shipments
+                            WHERE order_id = ? ORDER BY shipment_id DESC LIMIT 1', [$oid]);
+            if ($ship && (trim((string) $ship['carrier']) === ''
+                       || trim((string) $ship['tracking_number']) === '')) {
+                set_flash('Enter the carrier and tracking number before marking this order as shipped.', 'danger');
+                redirect('admin/order_detail.php?id=' . $oid);
+            }
+        }
+
         if (in_array($new, $valid, true) && $new !== $order['status']) {
             global $conn;
             try {
@@ -44,10 +58,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Notify the customer (shipping updates etc.).
                 $type = in_array($new, ['shipped','delivered'], true) ? 'shipping' : 'order';
+
+                // A "shipped" notice is useless without the tracking details.
+                $track = '';
+                if ($new === 'shipped') {
+                    $s = db_one('SELECT carrier, tracking_number FROM shipments
+                                 WHERE order_id = ? ORDER BY shipment_id DESC LIMIT 1', [$oid]);
+                    if ($s && $s['carrier'] !== '' && $s['tracking_number'] !== '') {
+                        $track = ' Carrier: ' . $s['carrier']
+                               . ', tracking number: ' . $s['tracking_number'] . '.';
+                    }
+                }
+
                 notify((int)$order['cust_id'], $type, 'Order ' . $order['order_number'] . ' ' . $new,
-                       'Your order ' . $order['order_number'] . ' is now marked "' . $new . '".');
-                send_app_mail($order['email'], 'Order ' . $order['order_number'] . ' update',
-                    "<p>Your order <strong>{$order['order_number']}</strong> status is now <strong>{$new}</strong>.</p>");
+                       'Your order ' . $order['order_number'] . ' is now marked "' . $new . '".' . $track);
+
+                $body = "<p>Your order <strong>{$order['order_number']}</strong> status is now <strong>{$new}</strong>.</p>";
+                if ($track !== '') {
+                    $body .= '<p>Carrier: <strong>' . e($s['carrier']) . '</strong><br>'
+                           . 'Tracking number: <strong>' . e($s['tracking_number']) . '</strong></p>';
+                }
+                send_app_mail($order['email'], 'Order ' . $order['order_number'] . ' update', $body);
                 set_flash('Order status updated to "' . e($new) . '".', 'success');
             } catch (Throwable $e) {
                 mysqli_rollback($conn);
@@ -58,9 +89,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'shipment') {
-        db_exec('UPDATE shipments SET carrier = ?, tracking_number = ? WHERE order_id = ?',
-                [clean($_POST['carrier'] ?? ''), clean($_POST['tracking_number'] ?? ''), $oid]);
-        set_flash('Shipment details saved.', 'success');
+        $carrier  = clean($_POST['carrier'] ?? '');
+        $tracking = clean($_POST['tracking_number'] ?? '');
+
+        $errors = [];
+        if (mb_strlen($carrier)  > 60) $errors[] = 'Carrier name is too long (max 60 characters).';
+        if (mb_strlen($tracking) > 60) $errors[] = 'Tracking number is too long (max 60 characters).';
+        // Both blank is fine (nothing dispatched yet); one blank is not.
+        if (($carrier === '') !== ($tracking === '')) {
+            $errors[] = 'Enter both the carrier and the tracking number, or leave both blank.';
+        }
+        if ($tracking !== '' && !preg_match('/^[A-Za-z0-9\- ]{4,60}$/', $tracking)) {
+            $errors[] = 'Tracking number may only contain letters, numbers, spaces and hyphens.';
+        }
+
+        if ($errors) {
+            foreach ($errors as $e) set_flash($e, 'danger');
+        } else {
+            db_exec('UPDATE shipments SET carrier = ?, tracking_number = ? WHERE order_id = ?',
+                    [$carrier, $tracking, $oid]);
+            set_flash('Shipment details saved.', 'success');
+        }
         redirect('admin/order_detail.php?id=' . $oid);
     }
 }
@@ -103,16 +152,35 @@ include INCLUDES_PATH . '/dash_open.php';
       </div>
     </div>
 
-    <?php if ($shipment): ?>
+    <?php if ($shipment):
+      $hasTracking = trim((string) $shipment['carrier']) !== ''
+                  && trim((string) $shipment['tracking_number']) !== ''; ?>
     <div class="card shadow-sm">
-      <div class="card-header bg-white fw-semibold"><i class="bi bi-truck me-1"></i>Shipment Tracking</div>
+      <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-truck me-1"></i>Shipment Tracking</span>
+        <?php if (!$hasTracking): ?>
+          <span class="badge text-bg-warning">Required before shipping</span>
+        <?php endif; ?>
+      </div>
       <div class="card-body">
-        <form method="post" class="row g-2 align-items-end">
+        <?php if (!$hasTracking): ?>
+          <div class="alert alert-warning small py-2">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            Add a carrier and tracking number first. The customer is emailed these
+            details when the order is marked <strong>shipped</strong>, so the status
+            cannot be changed until they are filled in.
+          </div>
+        <?php endif; ?>
+        <form method="post" class="row g-2 align-items-end needs-validation" novalidate>
           <?= csrf_field() ?><input type="hidden" name="action" value="shipment">
           <div class="col-md-5"><label class="form-label small">Carrier</label>
-            <input name="carrier" class="form-control form-control-sm" value="<?= e($shipment['carrier']) ?>"></div>
+            <input name="carrier" class="form-control form-control-sm" maxlength="60"
+                   placeholder="e.g. LBC Express" value="<?= e($shipment['carrier']) ?>"></div>
           <div class="col-md-5"><label class="form-label small">Tracking #</label>
-            <input name="tracking_number" class="form-control form-control-sm" value="<?= e($shipment['tracking_number']) ?>"></div>
+            <input name="tracking_number" class="form-control form-control-sm" maxlength="60"
+                   pattern="[A-Za-z0-9\- ]{4,60}" placeholder="e.g. LBC123456789"
+                   value="<?= e($shipment['tracking_number']) ?>">
+            <div class="invalid-feedback">Letters, numbers, spaces and hyphens only (4–60).</div></div>
           <div class="col-md-2"><button class="btn btn-sm btn-outline-dark w-100">Save</button></div>
         </form>
       </div>

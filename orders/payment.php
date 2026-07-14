@@ -38,9 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     notify($uid, 'order', 'Payment received for ' . $order['order_number'],
            'We received your payment of ' . money($payment['amount']) . '. Ref: ' . $ref);
-    send_app_mail($_SESSION['user_email'], 'Receipt for ' . $order['order_number'],
-        "<p>Payment of <strong>" . money($payment['amount']) . "</strong> received for order " .
-        "<strong>{$order['order_number']}</strong>.</p><p>Transaction ref: {$ref}</p>");
+
+    // Full itemised receipt (the same content as the printable one).
+    send_app_mail($_SESSION['user_email'],
+        'Receipt for ' . $order['order_number'] . ' — ' . SITE_NAME,
+        order_receipt_html($oid));
 
     set_flash('Payment successful! Thank you.', 'success');
     redirect('orders/receipt.php?order=' . $oid);

@@ -1,8 +1,12 @@
 <?php
 /**
- * customer/notifications.php — Notification center: list, mark read, mark all.
+ * notifications.php — Notification centre: list, mark read, delete.
+ *
+ * Lives at the root, not under customer/, because it is every signed-in user's
+ * own inbox — administrators receive notifications too. The admin's broadcast
+ * tool is a different page: admin/notifications.php.
  */
-require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/config/config.php';
 require_login();
 $uid = (int) $_SESSION['user_id'];
 
@@ -12,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'read')      db_exec('UPDATE notifications SET is_read=1 WHERE notification_id=? AND user_id=?', [(int)$_POST['id'], $uid]);
     if ($action === 'read_all')  db_exec('UPDATE notifications SET is_read=1 WHERE user_id=?', [$uid]);
     if ($action === 'delete')    db_exec('DELETE FROM notifications WHERE notification_id=? AND user_id=?', [(int)$_POST['id'], $uid]);
-    redirect('customer/notifications.php');
+    redirect('notifications.php');
 }
 
 $notifs = db_all('SELECT * FROM notifications WHERE user_id=? ORDER BY created_at DESC', [$uid]);
@@ -20,7 +24,7 @@ $notifs = db_all('SELECT * FROM notifications WHERE user_id=? ORDER BY created_a
 $icons = ['registration'=>'bi-person-check','order'=>'bi-bag-check','shipping'=>'bi-truck','promo'=>'bi-megaphone','system'=>'bi-gear'];
 
 $page_title = 'Notifications';
-$active = 'dashboard';
+$active = 'inbox';
 $dash_title = 'Notifications';
 include INCLUDES_PATH . '/header.php';
 include INCLUDES_PATH . '/dash_open.php';

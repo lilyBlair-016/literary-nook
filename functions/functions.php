@@ -202,10 +202,99 @@ function clear_old(): void
  *  FORMATTING  (Module 4: number_format, date)
  * ========================================================================= */
 
-/** Format a money amount, e.g. money(1234.5) => "$1,234.50". */
+/** Format a money amount, e.g. money(1234.5) => "₱1,234.50". */
 function money($amount): string
 {
     return CURRENCY . number_format((float) $amount, 2);
+}
+
+/**
+ * Build the itemised receipt e-mailed to the customer after a transaction.
+ * Mirrors the printable receipt at orders/receipt.php.
+ *
+ * Inline styles are deliberate: e-mail clients strip <style> blocks and have no
+ * access to the site's stylesheet.
+ */
+function order_receipt_html(int $orderId): string
+{
+    $o = db_one(
+        'SELECT o.*, CONCAT(u.first_name," ",u.last_name) AS customer,
+                a.recipient_name, a.line1, a.line2, a.city, a.state, a.postal_code
+         FROM orders o
+         JOIN users u          ON u.user_id    = o.user_id
+         LEFT JOIN addresses a ON a.address_id = o.shipping_address_id
+         WHERE o.order_id = ?', [$orderId]);
+    if (!$o) return '';
+
+    $items = db_all('SELECT * FROM order_items WHERE order_id = ?', [$orderId]);
+    $pay   = db_one('SELECT * FROM payments WHERE order_id = ? ORDER BY payment_id DESC LIMIT 1', [$orderId]);
+
+    $th = 'padding:8px;border-bottom:2px solid #5E3023;text-align:left;font-size:13px;';
+    $td = 'padding:8px;border-bottom:1px solid #E3D3BC;font-size:13px;';
+
+    $h  = '<p>Hi ' . e($o['customer']) . ',</p>';
+    $h .= '<p>Thank you for your order. Here is your receipt.</p>';
+
+    $h .= '<table style="width:100%;border-collapse:collapse;margin:16px 0;">'
+        . '<tr><td style="' . $td . '"><strong>Order number</strong></td><td style="' . $td . '">' . e($o['order_number']) . '</td></tr>'
+        . '<tr><td style="' . $td . '"><strong>Date</strong></td><td style="' . $td . '">' . nice_datetime($o['placed_at']) . '</td></tr>';
+
+    if ($pay) {
+        $method = ucwords(str_replace('_', ' ', $pay['payment_method']));
+        $status = $pay['status'] === 'completed'
+            ? 'Paid'
+            : ($pay['payment_method'] === 'cod' ? 'To be paid on delivery' : ucfirst($pay['status']));
+        $h .= '<tr><td style="' . $td . '"><strong>Payment</strong></td><td style="' . $td . '">'
+            . e($method) . ' &mdash; ' . e($status) . '</td></tr>';
+        if (!empty($pay['transaction_ref'])) {
+            $h .= '<tr><td style="' . $td . '"><strong>Reference</strong></td><td style="' . $td . '">'
+                . e($pay['transaction_ref']) . '</td></tr>';
+        }
+    }
+    $h .= '</table>';
+
+    /* Line items */
+    $h .= '<table style="width:100%;border-collapse:collapse;margin:16px 0;">'
+        . '<tr><th style="' . $th . '">Item</th><th style="' . $th . '">Format</th>'
+        . '<th style="' . $th . 'text-align:center;">Qty</th>'
+        . '<th style="' . $th . 'text-align:right;">Total</th></tr>';
+    foreach ($items as $it) {
+        $h .= '<tr>'
+            . '<td style="' . $td . '">' . e($it['book_title']) . '</td>'
+            . '<td style="' . $td . 'text-transform:capitalize;">' . e($it['format_type']) . '</td>'
+            . '<td style="' . $td . 'text-align:center;">' . (int) $it['quantity'] . '</td>'
+            . '<td style="' . $td . 'text-align:right;">' . money($it['line_total']) . '</td>'
+            . '</tr>';
+    }
+    $h .= '</table>';
+
+    /* Totals */
+    $row = fn(string $l, string $v, string $extra = '') =>
+        '<tr><td style="' . $td . 'text-align:right;' . $extra . '">' . $l . '</td>'
+      . '<td style="' . $td . 'text-align:right;width:120px;' . $extra . '">' . $v . '</td></tr>';
+
+    $h .= '<table style="width:100%;border-collapse:collapse;">';
+    $h .= $row('Subtotal', money($o['subtotal']));
+    if ((float) $o['discount_amount'] > 0) {
+        $h .= $row('Discount', '&minus;' . money($o['discount_amount']), 'color:#4F6F52;');
+    }
+    $h .= $row('Shipping', (float) $o['shipping_fee'] > 0 ? money($o['shipping_fee']) : 'Free');
+    $h .= $row('<strong>Total</strong>', '<strong>' . money($o['total_amount']) . '</strong>',
+               'border-top:2px solid #5E3023;font-size:15px;');
+    $h .= '</table>';
+
+    if (!empty($o['line1'])) {
+        $addr = array_filter([$o['recipient_name'], $o['line1'], $o['line2'],
+                              trim($o['city'] . ', ' . $o['state'] . ' ' . $o['postal_code'])]);
+        $h .= '<p style="margin-top:16px;"><strong>Delivering to</strong><br>'
+            . e(implode(', ', $addr)) . '</p>';
+    }
+
+    $h .= '<p style="margin-top:20px;color:#895737;font-size:12px;">'
+        . 'You can view this receipt any time from your account. Thank you for shopping with '
+        . e(SITE_NAME) . '.</p>';
+
+    return $h;
 }
 
 /** Human-friendly date, e.g. "Jul 04, 2026". */

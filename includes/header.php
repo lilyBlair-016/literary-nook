@@ -83,11 +83,11 @@ $logoUrl = site_logo_url();   // assets/images/logo.* — null when absent
               <?php $recent = recent_notifications(5); if (!$recent): ?>
                 <li><span class="dropdown-item-text text-muted small">No notifications.</span></li>
               <?php else: foreach ($recent as $rn): ?>
-                <li><a class="dropdown-item small <?= $rn['is_read'] ? '' : 'fw-semibold' ?>" href="<?= url('customer/notifications.php') ?>">
+                <li><a class="dropdown-item small <?= $rn['is_read'] ? '' : 'fw-semibold' ?>" href="<?= url('notifications.php') ?>">
                   <i class="bi bi-dot text-warning"></i><?= e(excerpt($rn['subject'], 34)) ?></a></li>
               <?php endforeach; endif; ?>
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-center small" href="<?= url('customer/notifications.php') ?>">View all</a></li>
+              <li><a class="dropdown-item text-center small" href="<?= url('notifications.php') ?>">View all</a></li>
             </ul>
           </li>
           <!-- User dropdown -->

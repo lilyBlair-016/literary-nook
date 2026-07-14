@@ -46,7 +46,7 @@ $counts = db_all("SELECT membership_status, COUNT(*) n FROM users WHERE role='cu
 $total  = (int) db_scalar("SELECT COUNT(*) FROM users WHERE role='customer'");
 
 $page_title = 'Send Notifications';
-$active = 'dashboard';
+$active = 'alerts';
 $dash_title = 'Promotional Alerts';
 include INCLUDES_PATH . '/header.php';
 include INCLUDES_PATH . '/dash_open.php';
